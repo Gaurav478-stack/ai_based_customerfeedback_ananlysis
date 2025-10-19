@@ -1,0 +1,1851 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Feedback Analyzer | Secure Customer Insights Platform</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3a0ca3;
+            --accent: #7209b7;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --success: #4cc9f0;
+            --warning: #f72585;
+            --error: #dc3545;
+            --gray: #6c757d;
+            --card-bg: rgba(255, 255, 255, 0.9);
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            --gradient: linear-gradient(135deg, #4361ee, #3a0ca3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: var(--dark);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header Styles */
+        header {
+            background: var(--gradient);
+            color: white;
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .logo i {
+            font-size: 1.8rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .nav-links a:hover {
+            transform: translateY(-2px);
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: white;
+            transition: width 0.3s ease;
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        /* Auth Section */
+        .auth-section {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .auth-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .auth-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        /* Login Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+            width: 90%;
+            max-width: 400px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--gray);
+        }
+
+        /* Security Badges */
+        .security-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 8px;
+            background: #e8f5e8;
+            color: #2e7d32;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            margin-left: 10px;
+        }
+
+        .security-alert {
+            background: #ffebee;
+            color: #c62828;
+            padding: 10px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border-left: 4px solid #c62828;
+        }
+
+        /* Input Validation Styles */
+        .form-control.valid {
+            border-color: #28a745;
+            box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.2);
+        }
+
+        .form-control.invalid {
+            border-color: #dc3545;
+            box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.2);
+        }
+
+        .validation-message {
+            font-size: 0.8rem;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .validation-message.error {
+            color: #dc3545;
+            display: block;
+        }
+
+        .validation-message.success {
+            color: #28a745;
+            display: block;
+        }
+
+        /* Role-based Access */
+        .admin-only {
+            border-left: 4px solid var(--accent);
+            background: rgba(114, 9, 183, 0.1);
+        }
+
+        .role-badge {
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .role-admin {
+            background: var(--accent);
+            color: white;
+        }
+
+        .role-user {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* Rate Limiting Indicator */
+        .rate-limit {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.8rem;
+            color: var(--gray);
+            margin-top: 10px;
+        }
+
+        .rate-progress {
+            flex: 1;
+            height: 4px;
+            background: #e9ecef;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .rate-progress-bar {
+            height: 100%;
+            background: var(--success);
+            transition: width 0.3s ease;
+        }
+
+        /* Enhanced existing styles remain the same */
+        .hero {
+            padding: 5rem 0;
+            text-align: center;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none"><path d="M1200 120L0 16.48 0 0 1200 0 1200 120z" fill="%23ffffff"/></svg>') bottom no-repeat;
+            background-size: cover;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            opacity: 0;
+            animation: fadeInUp 1s ease 0.2s forwards;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            color: var(--gray);
+            max-width: 700px;
+            margin: 0 auto 2rem;
+            opacity: 0;
+            animation: fadeInUp 1s ease 0.4s forwards;
+        }
+
+        .cta-button {
+            display: inline-block;
+            background: var(--gradient);
+            color: white;
+            padding: 12px 30px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+            opacity: 0;
+            animation: fadeInUp 1s ease 0.6s forwards;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(67, 97, 238, 0.4);
+        }
+
+        .main-content {
+            padding: 4rem 0;
+        }
+
+        .section-title {
+            text-align: center;
+            margin-bottom: 3rem;
+            position: relative;
+        }
+
+        .section-title h2 {
+            font-size: 2.5rem;
+            color: var(--secondary);
+            display: inline-block;
+        }
+
+        .section-title h2::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 4px;
+            background: var(--accent);
+            border-radius: 2px;
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 4rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        .card.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .card-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--secondary);
+        }
+
+        .card p {
+            color: var(--gray);
+            line-height: 1.6;
+        }
+
+        .form-container {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            margin-bottom: 3rem;
+            position: relative;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--secondary);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+        }
+
+        textarea.form-control {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .btn {
+            background: var(--gradient);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(67, 97, 238, 0.3);
+        }
+
+        .btn-block {
+            display: block;
+            width: 100%;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .tab {
+            padding: 12px 25px;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--gray);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .tab.active {
+            color: var(--primary);
+        }
+
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: var(--primary);
+            border-radius: 3px 3px 0 0;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .stat-label {
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+
+        .chart-container {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            margin-bottom: 3rem;
+            height: 400px;
+        }
+
+        .reviews-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .review-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+        }
+
+        .review-card:hover {
+            transform: translateX(5px);
+        }
+
+        .review-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .reviewer {
+            font-weight: 600;
+            color: var(--secondary);
+        }
+
+        .rating {
+            color: #ffc107;
+        }
+
+        .sentiment-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .sentiment-positive {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .sentiment-negative {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .sentiment-neutral {
+            background: #f5f5f5;
+            color: #616161;
+        }
+
+        .credibility-score {
+            font-size: 0.9rem;
+            color: var(--gray);
+            margin-top: 0.5rem;
+        }
+
+        .ai-analysis {
+            background: var(--gradient);
+            color: white;
+            padding: 4rem 0;
+            margin: 4rem 0;
+            border-radius: 20px;
+            text-align: center;
+        }
+
+        .ai-analysis h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .ai-analysis p {
+            max-width: 700px;
+            margin: 0 auto 2rem;
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .ai-features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .ai-feature {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2rem;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .ai-feature:hover {
+            transform: translateY(-10px);
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .ai-feature i {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        footer {
+            background: var(--dark);
+            color: white;
+            padding: 3rem 0 1.5rem;
+            margin-top: 4rem;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .footer-section h3 {
+            font-size: 1.2rem;
+            margin-bottom: 1.5rem;
+            position: relative;
+            display: inline-block;
+        }
+
+        .footer-section h3::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 40px;
+            height: 3px;
+            background: var(--primary);
+        }
+
+        .footer-links {
+            list-style: none;
+        }
+
+        .footer-links li {
+            margin-bottom: 0.8rem;
+        }
+
+        .footer-links a {
+            color: #adb5bd;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: white;
+            padding-left: 5px;
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 1.5rem;
+            border-top: 1px solid #495057;
+            color: #adb5bd;
+            font-size: 0.9rem;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .navbar {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .nav-links {
+                gap: 1rem;
+                flex-direction: column;
+            }
+
+            .auth-section {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .cards-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .tabs {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header with Authentication -->
+    <header>
+        <div class="container">
+            <nav class="navbar">
+                <div class="logo">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>SecureFeedback AI</span>
+                    <span class="security-badge">
+                        <i class="fas fa-lock"></i> Secure
+                    </span>
+                </div>
+                <div class="nav-links">
+                    <a href="#dashboard">Dashboard</a>
+                    <a href="#analyze">Analyze</a>
+                    <a href="#analytics">Analytics</a>
+                    <a href="#reviews">Reviews</a>
+                    <div class="auth-section" id="authSection">
+                        <button class="auth-btn" onclick="showLoginModal()">
+                            <i class="fas fa-sign-in-alt"></i> Login
+                        </button>
+                        <button class="auth-btn" onclick="showRegisterModal()">
+                            <i class="fas fa-user-plus"></i> Register
+                        </button>
+                    </div>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Secure Login</h3>
+                <button class="close-modal" onclick="closeModal('loginModal')">&times;</button>
+            </div>
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label for="loginEmail">Email</label>
+                    <input type="email" id="loginEmail" class="form-control" required 
+                           oninput="validateEmail(this)"
+                           placeholder="Enter your email">
+                    <div class="validation-message" id="loginEmailError"></div>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" class="form-control" required
+                           oninput="validatePassword(this)"
+                           placeholder="Enter your password">
+                    <div class="validation-message" id="loginPasswordError"></div>
+                </div>
+                <button type="submit" class="btn btn-block">
+                    <i class="fas fa-lock"></i> Secure Login
+                </button>
+            </form>
+            <div class="security-alert" style="display: none;" id="loginSecurityAlert">
+                <i class="fas fa-exclamation-triangle"></i>
+                Multiple failed attempts may temporarily lock your account.
+            </div>
+        </div>
+    </div>
+
+    <!-- Register Modal -->
+    <div id="registerModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Create Account</h3>
+                <button class="close-modal" onclick="closeModal('registerModal')">&times;</button>
+            </div>
+            <form id="registerForm" onsubmit="handleRegister(event)">
+                <div class="form-group">
+                    <label for="registerName">Full Name</label>
+                    <input type="text" id="registerName" class="form-control" required
+                           oninput="validateName(this)"
+                           placeholder="Enter your full name">
+                    <div class="validation-message" id="registerNameError"></div>
+                </div>
+                <div class="form-group">
+                    <label for="registerEmail">Email</label>
+                    <input type="email" id="registerEmail" class="form-control" required
+                           oninput="validateEmail(this)"
+                           placeholder="Enter your email">
+                    <div class="validation-message" id="registerEmailError"></div>
+                </div>
+                <div class="form-group">
+                    <label for="registerPassword">Password</label>
+                    <input type="password" id="registerPassword" class="form-control" required
+                           oninput="validatePassword(this)"
+                           placeholder="Create a strong password">
+                    <div class="validation-message" id="registerPasswordError"></div>
+                </div>
+                <div class="form-group">
+                    <label for="registerRole">Account Type</label>
+                    <select id="registerRole" class="form-control">
+                        <option value="user">Standard User</option>
+                        <option value="admin">Administrator (Requires verification)</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-block">
+                    <i class="fas fa-user-plus"></i> Create Account
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <h1>Secure AI-Powered Feedback Analysis</h1>
+            <p>Enterprise-grade security with advanced AI algorithms. Protect your data while gaining valuable insights.</p>
+            <a href="#analyze" class="cta-button">
+                <i class="fas fa-shield-alt"></i> Start Secure Analysis
+            </a>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <div class="container main-content">
+        <!-- Security Features Section -->
+        <section id="security">
+            <div class="section-title">
+                <h2>Security Features</h2>
+            </div>
+            <div class="cards-grid">
+                <div class="card">
+                    <div class="card-icon">
+                        <i class="fas fa-user-shield"></i>
+                    </div>
+                    <h3>Role-Based Access Control</h3>
+                    <p>Granular permissions and access levels for different user roles with audit logging.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">
+                        <i class="fas fa-filter"></i>
+                    </div>
+                    <h3>Input Validation</h3>
+                    <p>Advanced sanitization and validation to prevent XSS and injection attacks.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <h3>Rate Limiting</h3>
+                    <p>Protection against brute force and DDoS attacks with intelligent throttling.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Dashboard Section -->
+        <section id="dashboard">
+            <div class="section-title">
+                <h2>Dashboard Overview</h2>
+                <span class="role-badge role-user" id="userRoleBadge">User</span>
+            </div>
+
+            <div class="analytics-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="total-reviews">0</div>
+                    <div class="stat-label">Total Reviews</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="avg-rating">0.0</div>
+                    <div class="stat-label">Average Rating</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="positive-rate">0%</div>
+                    <div class="stat-label">Positive Sentiment</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="avg-credibility">0%</div>
+                    <div class="stat-label">Avg. Credibility</div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <canvas id="sentimentChart"></canvas>
+            </div>
+        </section>
+
+        <!-- Analyze Section -->
+        <section id="analyze">
+            <div class="section-title">
+                <h2>Analyze Feedback</h2>
+            </div>
+
+            <div class="tabs">
+                <div class="tab active" data-tab="basic">Basic Analysis</div>
+                <div class="tab" data-tab="advanced">Advanced AI Analysis</div>
+            </div>
+
+            <div class="tab-content active" id="basic-tab">
+                <div class="form-container">
+                    <div class="security-badge">
+                        <i class="fas fa-shield-alt"></i> Input Validation Active
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="reviewerName">Reviewer Name</label>
+                        <input type="text" id="reviewerName" class="form-control" 
+                               oninput="validateName(this)"
+                               placeholder="Enter reviewer name">
+                        <div class="validation-message" id="reviewerNameError"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="reviewText">Review Text</label>
+                        <textarea id="reviewText" class="form-control" 
+                                  oninput="validateReviewText(this)"
+                                  placeholder="Paste the customer review here..."></textarea>
+                        <div class="validation-message" id="reviewTextError"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="reviewRating">Rating</label>
+                        <select id="reviewRating" class="form-control">
+                            <option value="5">★★★★★ (5) - Excellent</option>
+                            <option value="4">★★★★ (4) - Good</option>
+                            <option value="3">★★★ (3) - Average</option>
+                            <option value="2">★★ (2) - Poor</option>
+                            <option value="1">★ (1) - Very Poor</option>
+                        </select>
+                    </div>
+
+                    <div class="rate-limit">
+                        <i class="fas fa-tachometer-alt"></i>
+                        API Calls: 
+                        <div class="rate-progress">
+                            <div class="rate-progress-bar" id="rateProgress" style="width: 0%"></div>
+                        </div>
+                        <span id="rateLimitText">0/100</span>
+                    </div>
+
+                    <button class="btn btn-block" onclick="analyzeReview()" id="analyzeBtn">
+                        <i class="fas fa-chart-line"></i> Analyze Review
+                    </button>
+                </div>
+            </div>
+
+            <div id="analysis-result" class="form-container" style="display: none;">
+                <h3>Analysis Results</h3>
+                <div id="result-content"></div>
+            </div>
+        </section>
+
+        <!-- Admin Section (Visible only to admins) -->
+        <section id="admin-section" style="display: none;">
+            <div class="section-title">
+                <h2>Admin Dashboard</h2>
+                <span class="role-badge role-admin">Administrator</span>
+            </div>
+            <div class="form-container admin-only">
+                <h3><i class="fas fa-cog"></i> System Administration</h3>
+                <p>This section is only visible to users with administrator privileges.</p>
+                <div class="form-group">
+                    <label>User Management</label>
+                    <button class="btn" onclick="manageUsers()">
+                        <i class="fas fa-users-cog"></i> Manage Users
+                    </button>
+                </div>
+                <div class="form-group">
+                    <label>Security Logs</label>
+                    <button class="btn" onclick="viewSecurityLogs()">
+                        <i class="fas fa-clipboard-list"></i> View Security Logs
+                    </button>
+                </div>
+                <div class="form-group">
+                    <label>System Settings</label>
+                    <button class="btn" onclick="systemSettings()">
+                        <i class="fas fa-sliders-h"></i> Configure System
+                    </button>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>SecureFeedback AI</h3>
+                    <p>Advanced AI-powered feedback analysis with enterprise-grade security features.</p>
+                </div>
+                <div class="footer-section">
+                    <h3>Quick Links</h3>
+                    <ul class="footer-links">
+                        <li><a href="#dashboard">Dashboard</a></li>
+                        <li><a href="#analyze">Analyze</a></li>
+                        <li><a href="#analytics">Analytics</a></li>
+                        <li><a href="#reviews">Reviews</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h3>Security</h3>
+                    <ul class="footer-links">
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="#">Security Features</a></li>
+                        <li><a href="#">Compliance</a></li>
+                        <li><a href="#">Data Protection</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2023 SecureFeedback AI. All rights reserved. | Enterprise Security Platform</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        // Security Configuration
+        const SECURITY_CONFIG = {
+            maxReviewLength: 1000,
+            minReviewLength: 10,
+            maxNameLength: 50,
+            rateLimit: 100,
+            sessionTimeout: 30 * 60 * 1000, // 30 minutes
+            passwordMinLength: 8,
+            apiCallInterval: 1000 // 1 second between API calls
+        };
+
+        // Application State
+        let currentUser = null;
+        let apiCallCount = 0;
+        let lastApiCall = 0;
+        let failedLoginAttempts = 0;
+
+        // DOM Elements
+        const tabs = document.querySelectorAll('.tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+        const analysisResult = document.getElementById('analysis-result');
+        const resultContent = document.getElementById('result-content');
+        const authSection = document.getElementById('authSection');
+        const adminSection = document.getElementById('admin-section');
+        const userRoleBadge = document.getElementById('userRoleBadge');
+
+        // Sample data for demonstration
+        let reviews = [
+            {
+                id: 1,
+                reviewer: "Sarah Johnson",
+                text: "This product completely changed how I work! The quality is exceptional and it arrived faster than expected.",
+                rating: 5,
+                sentiment: "positive",
+                credibility: 92,
+                date: "2023-10-15"
+            },
+            {
+                id: 2,
+                reviewer: "Michael Chen",
+                text: "Average product. Does what it says but nothing special. The interface could be more intuitive.",
+                rating: 3,
+                sentiment: "neutral",
+                credibility: 78,
+                date: "2023-10-12"
+            },
+            {
+                id: 3,
+                reviewer: "Emma Rodriguez",
+                text: "Very disappointed with the customer service. The product itself is okay but the support team was unhelpful.",
+                rating: 2,
+                sentiment: "negative",
+                credibility: 85,
+                date: "2023-10-10"
+            }
+        ];
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeTabs();
+            initializeCharts();
+            loadReviews();
+            updateStats();
+            initializeScrollAnimations();
+            checkExistingSession();
+            updateRateLimitDisplay();
+        });
+
+        // Security Functions
+        function sanitizeInput(input) {
+            if (typeof input !== 'string') return '';
+            
+            // Remove potentially dangerous characters
+            return input
+                .replace(/[<>]/g, '') // Remove < and >
+                .replace(/javascript:/gi, '') // Remove javascript: protocol
+                .replace(/on\w+=/gi, '') // Remove event handlers
+                .trim();
+        }
+
+        function validateEmail(input) {
+            const value = sanitizeInput(input.value);
+            const errorElement = document.getElementById(input.id + 'Error');
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            
+            if (!value) {
+                showValidationError(input, errorElement, 'Email is required');
+                return false;
+            }
+            
+            if (!emailRegex.test(value)) {
+                showValidationError(input, errorElement, 'Please enter a valid email address');
+                return false;
+            }
+            
+            showValidationSuccess(input, errorElement, 'Valid email');
+            return true;
+        }
+
+        function validatePassword(input) {
+            const value = input.value;
+            const errorElement = document.getElementById(input.id + 'Error');
+            
+            if (!value) {
+                showValidationError(input, errorElement, 'Password is required');
+                return false;
+            }
+            
+            if (value.length < SECURITY_CONFIG.passwordMinLength) {
+                showValidationError(input, errorElement, `Password must be at least ${SECURITY_CONFIG.passwordMinLength} characters`);
+                return false;
+            }
+            
+            // Check for password strength
+            const strength = checkPasswordStrength(value);
+            if (strength < 2) {
+                showValidationError(input, errorElement, 'Password is too weak. Include uppercase, lowercase, numbers, and symbols');
+                return false;
+            }
+            
+            showValidationSuccess(input, errorElement, 'Strong password');
+            return true;
+        }
+
+        function checkPasswordStrength(password) {
+            let strength = 0;
+            
+            // Length check
+            if (password.length >= 8) strength++;
+            
+            // Contains lowercase
+            if (/[a-z]/.test(password)) strength++;
+            
+            // Contains uppercase
+            if (/[A-Z]/.test(password)) strength++;
+            
+            // Contains numbers
+            if (/[0-9]/.test(password)) strength++;
+            
+            // Contains special characters
+            if (/[^A-Za-z0-9]/.test(password)) strength++;
+            
+            return strength;
+        }
+
+        function validateName(input) {
+            const value = sanitizeInput(input.value);
+            const errorElement = document.getElementById(input.id + 'Error');
+            
+            if (!value) {
+                showValidationError(input, errorElement, 'Name is required');
+                return false;
+            }
+            
+            if (value.length > SECURITY_CONFIG.maxNameLength) {
+                showValidationError(input, errorElement, `Name must be less than ${SECURITY_CONFIG.maxNameLength} characters`);
+                return false;
+            }
+            
+            // Check for suspicious patterns
+            if (/(<script|javascript:|on\w+=)/gi.test(value)) {
+                showValidationError(input, errorElement, 'Invalid characters detected');
+                return false;
+            }
+            
+            showValidationSuccess(input, errorElement, 'Valid name');
+            return true;
+        }
+
+        function validateReviewText(input) {
+            const value = sanitizeInput(input.value);
+            const errorElement = document.getElementById(input.id + 'Error');
+            
+            if (!value) {
+                showValidationError(input, errorElement, 'Review text is required');
+                return false;
+            }
+            
+            if (value.length < SECURITY_CONFIG.minReviewLength) {
+                showValidationError(input, errorElement, `Review must be at least ${SECURITY_CONFIG.minReviewLength} characters`);
+                return false;
+            }
+            
+            if (value.length > SECURITY_CONFIG.maxReviewLength) {
+                showValidationError(input, errorElement, `Review must be less than ${SECURITY_CONFIG.maxReviewLength} characters`);
+                return false;
+            }
+            
+            showValidationSuccess(input, errorElement, 'Valid review text');
+            return true;
+        }
+
+        function showValidationError(input, errorElement, message) {
+            input.classList.remove('valid');
+            input.classList.add('invalid');
+            errorElement.textContent = message;
+            errorElement.className = 'validation-message error';
+        }
+
+        function showValidationSuccess(input, errorElement, message) {
+            input.classList.remove('invalid');
+            input.classList.add('valid');
+            errorElement.textContent = message;
+            errorElement.className = 'validation-message success';
+        }
+
+        // Authentication Functions
+        function handleLogin(event) {
+            event.preventDefault();
+            
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            if (!validateEmail(document.getElementById('loginEmail')) || 
+                !validatePassword(document.getElementById('loginPassword'))) {
+                return;
+            }
+            
+            // Check for rate limiting
+            if (failedLoginAttempts >= 5) {
+                showSecurityAlert('loginSecurityAlert', 'Too many failed attempts. Please try again in 15 minutes.');
+                return;
+            }
+            
+            // Simulate API call
+            simulateLogin(email, password);
+        }
+
+        function simulateLogin(email, password) {
+            // Show loading state
+            const loginBtn = document.querySelector('#loginForm .btn');
+            const originalText = loginBtn.innerHTML;
+            loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Authenticating...';
+            loginBtn.disabled = true;
+            
+            // In a real application, this would be an API call to your backend
+            setTimeout(() => {
+                // Mock authentication - in real app, verify credentials with backend
+                if (password.length < 8) {
+                    failedLoginAttempts++;
+                    showSecurityAlert('loginSecurityAlert', 'Invalid credentials. Please try again.');
+                    loginBtn.innerHTML = originalText;
+                    loginBtn.disabled = false;
+                    return;
+                }
+                
+                // Mock user data
+                const user = {
+                    id: 1,
+                    email: email,
+                    name: email.split('@')[0],
+                    role: email.includes('admin') ? 'admin' : 'user',
+                    token: 'mock-jwt-token-' + Date.now()
+                };
+                
+                loginUser(user);
+                closeModal('loginModal');
+                
+                // Reset login button
+                loginBtn.innerHTML = originalText;
+                loginBtn.disabled = false;
+            }, 1500);
+        }
+
+        function handleRegister(event) {
+            event.preventDefault();
+            
+            const name = document.getElementById('registerName').value;
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            const role = document.getElementById('registerRole').value;
+            
+            if (!validateName(document.getElementById('registerName')) || 
+                !validateEmail(document.getElementById('registerEmail')) || 
+                !validatePassword(document.getElementById('registerPassword'))) {
+                return;
+            }
+            
+            // Simulate registration
+            simulateRegister(name, email, password, role);
+        }
+
+        function simulateRegister(name, email, password, role) {
+            // Show loading state
+            const registerBtn = document.querySelector('#registerForm .btn');
+            const originalText = registerBtn.innerHTML;
+            registerBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating Account...';
+            registerBtn.disabled = true;
+            
+            setTimeout(() => {
+                // Mock user data
+                const user = {
+                    id: Math.floor(Math.random() * 1000) + 1,
+                    email: email,
+                    name: name,
+                    role: role,
+                    token: 'mock-jwt-token-' + Date.now()
+                };
+                
+                // In a real app, this would save to backend
+                localStorage.setItem('user_' + user.id, JSON.stringify(user));
+                
+                loginUser(user);
+                closeModal('registerModal');
+                
+                // Reset register button
+                registerBtn.innerHTML = originalText;
+                registerBtn.disabled = false;
+            }, 1500);
+        }
+
+        function loginUser(user) {
+            currentUser = user;
+            localStorage.setItem('currentUser', JSON.stringify(user));
+            localStorage.setItem('loginTime', Date.now().toString());
+            
+            updateUIForUser();
+            failedLoginAttempts = 0; // Reset failed attempts on successful login
+        }
+
+        function logoutUser() {
+            currentUser = null;
+            localStorage.removeItem('currentUser');
+            localStorage.removeItem('loginTime');
+            
+            updateUIForUser();
+        }
+
+        function checkExistingSession() {
+            const savedUser = localStorage.getItem('currentUser');
+            const loginTime = localStorage.getItem('loginTime');
+            
+            if (savedUser && loginTime) {
+                const sessionAge = Date.now() - parseInt(loginTime);
+                
+                if (sessionAge < SECURITY_CONFIG.sessionTimeout) {
+                    currentUser = JSON.parse(savedUser);
+                    updateUIForUser();
+                } else {
+                    // Session expired
+                    logoutUser();
+                }
+            }
+        }
+
+        function updateUIForUser() {
+            const authSection = document.getElementById('authSection');
+            
+            if (currentUser) {
+                // User is logged in
+                authSection.innerHTML = `
+                    <div class="user-info">
+                        <div class="user-avatar">${currentUser.name.charAt(0).toUpperCase()}</div>
+                        <span>${currentUser.name}</span>
+                        <button class="auth-btn" onclick="logoutUser()">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </button>
+                    </div>
+                `;
+                
+                // Update role badge
+                userRoleBadge.textContent = currentUser.role;
+                userRoleBadge.className = `role-badge role-${currentUser.role}`;
+                
+                // Show/hide admin section based on role
+                if (currentUser.role === 'admin') {
+                    adminSection.style.display = 'block';
+                } else {
+                    adminSection.style.display = 'none';
+                }
+            } else {
+                // User is not logged in
+                authSection.innerHTML = `
+                    <button class="auth-btn" onclick="showLoginModal()">
+                        <i class="fas fa-sign-in-alt"></i> Login
+                    </button>
+                    <button class="auth-btn" onclick="showRegisterModal()">
+                        <i class="fas fa-user-plus"></i> Register
+                    </button>
+                `;
+                
+                // Reset role badge
+                userRoleBadge.textContent = 'Guest';
+                userRoleBadge.className = 'role-badge role-user';
+                
+                // Hide admin section
+                adminSection.style.display = 'none';
+            }
+        }
+
+        function showSecurityAlert(alertId, message) {
+            const alert = document.getElementById(alertId);
+            alert.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${message}`;
+            alert.style.display = 'block';
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                alert.style.display = 'none';
+            }, 5000);
+        }
+
+        // Modal Functions
+        function showLoginModal() {
+            document.getElementById('loginModal').style.display = 'block';
+        }
+
+        function showRegisterModal() {
+            document.getElementById('registerModal').style.display = 'block';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+            
+            // Reset forms
+            document.querySelector(`#${modalId} form`).reset();
+            
+            // Clear validation states
+            const inputs = document.querySelectorAll(`#${modalId} .form-control`);
+            inputs.forEach(input => {
+                input.classList.remove('valid', 'invalid');
+            });
+            
+            const messages = document.querySelectorAll(`#${modalId} .validation-message`);
+            messages.forEach(message => {
+                message.style.display = 'none';
+            });
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modals = document.querySelectorAll('.modal');
+            modals.forEach(modal => {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+        }
+
+        // Tab Functions
+        function initializeTabs() {
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const tabId = tab.getAttribute('data-tab');
+                    
+                    // Update active tab
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    
+                    // Show active tab content
+                    tabContents.forEach(content => {
+                        content.classList.remove('active');
+                    });
+                    document.getElementById(`${tabId}-tab`).classList.add('active');
+                });
+            });
+        }
+
+        // Analysis Functions
+        function analyzeReview() {
+            // Check if user is logged in
+            if (!currentUser) {
+                alert('Please log in to analyze reviews');
+                showLoginModal();
+                return;
+            }
+            
+            // Check rate limiting
+            if (apiCallCount >= SECURITY_CONFIG.rateLimit) {
+                alert('Rate limit exceeded. Please try again later.');
+                return;
+            }
+            
+            // Validate inputs
+            const reviewerName = document.getElementById('reviewerName');
+            const reviewText = document.getElementById('reviewText');
+            
+            if (!validateName(reviewerName) || !validateReviewText(reviewText)) {
+                alert('Please fix validation errors before submitting');
+                return;
+            }
+            
+            // Update rate limiting
+            apiCallCount++;
+            lastApiCall = Date.now();
+            updateRateLimitDisplay();
+            
+            // Show loading state
+            const analyzeBtn = document.getElementById('analyzeBtn');
+            const originalText = analyzeBtn.innerHTML;
+            analyzeBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing...';
+            analyzeBtn.disabled = true;
+            
+            // Simulate API call with delay
+            setTimeout(() => {
+                // Get form values
+                const reviewer = sanitizeInput(reviewerName.value);
+                const text = sanitizeInput(reviewText.value);
+                const rating = parseInt(document.getElementById('reviewRating').value);
+                
+                // Perform analysis (in a real app, this would call an API)
+                const analysis = performSentimentAnalysis(text);
+                const credibility = calculateCredibilityScore(text, reviewer);
+                
+                // Create new review
+                const newReview = {
+                    id: reviews.length + 1,
+                    reviewer: reviewer,
+                    text: text,
+                    rating: rating,
+                    sentiment: analysis.sentiment,
+                    credibility: credibility,
+                    date: new Date().toISOString().split('T')[0]
+                };
+                
+                // Add to reviews
+                reviews.push(newReview);
+                
+                // Display results
+                displayAnalysisResult(newReview, analysis);
+                
+                // Update stats and charts
+                updateStats();
+                updateCharts();
+                
+                // Reset button
+                analyzeBtn.innerHTML = originalText;
+                analyzeBtn.disabled = false;
+                
+                // Reset form
+                document.getElementById('reviewerName').value = '';
+                document.getElementById('reviewText').value = '';
+                document.getElementById('reviewRating').value = '5';
+                
+                // Clear validation states
+                reviewerName.classList.remove('valid', 'invalid');
+                reviewText.classList.remove('valid', 'invalid');
+                document.getElementById('reviewerNameError').style.display = 'none';
+                document.getElementById('reviewTextError').style.display = 'none';
+            }, 2000);
+        }
+
+        function performSentimentAnalysis(text) {
+            // Simple sentiment analysis (in a real app, this would use an AI service)
+            const positiveWords = ['excellent', 'amazing', 'great', 'good', 'love', 'perfect', 'awesome', 'fantastic', 'outstanding'];
+            const negativeWords = ['terrible', 'awful', 'horrible', 'bad', 'hate', 'disappointed', 'poor', 'worst', 'useless'];
+            
+            let positiveCount = 0;
+            let negativeCount = 0;
+            
+            const words = text.toLowerCase().split(/\s+/);
+            
+            words.forEach(word => {
+                if (positiveWords.includes(word)) positiveCount++;
+                if (negativeWords.includes(word)) negativeCount++;
+            });
+            
+            if (positiveCount > negativeCount) {
+                return { sentiment: 'positive', confidence: Math.min(positiveCount * 15, 95) };
+            } else if (negativeCount > positiveCount) {
+                return { sentiment: 'negative', confidence: Math.min(negativeCount * 15, 95) };
+            } else {
+                return { sentiment: 'neutral', confidence: 50 };
+            }
+        }
+
+        function calculateCredibilityScore(text, reviewer) {
+            // Simple credibility scoring (in a real app, this would be more sophisticated)
+            let score = 50; // Base score
+            
+            // Text length factor
+            if (text.length > 100) score += 10;
+            if (text.length > 200) score += 10;
+            
+            // Reviewer name factor
+            if (reviewer.split(' ').length >= 2) score += 10;
+            
+            // Content quality indicators
+            if (text.includes('.')) score += 5; // Has sentences
+            if (text.split(' ').length > 10) score += 5; // Not too short
+            
+            // Cap at 100
+            return Math.min(score, 100);
+        }
+
+        function displayAnalysisResult(review, analysis) {
+            analysisResult.style.display = 'block';
+            
+            const sentimentClass = `sentiment-${analysis.sentiment}`;
+            const sentimentLabel = analysis.sentiment.charAt(0).toUpperCase() + analysis.sentiment.slice(1);
+            
+            resultContent.innerHTML = `
+                <div class="review-card">
+                    <div class="review-header">
+                        <div class="reviewer">${review.reviewer}</div>
+                        <div class="rating">${'★'.repeat(review.rating)}${'☆'.repeat(5-review.rating)}</div>
+                    </div>
+                    <p>${review.text}</p>
+                    <div class="sentiment-badge ${sentimentClass}">
+                        ${sentimentLabel} Sentiment (${analysis.confidence}% confidence)
+                    </div>
+                    <div class="credibility-score">
+                        Credibility Score: ${review.credibility}%
+                    </div>
+                </div>
+                <div class="security-badge" style="margin-top: 15px;">
+                    <i class="fas fa-check-circle"></i> Analysis completed securely
+                </div>
+            `;
+            
+            // Scroll to results
+            analysisResult.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Stats and Charts
+        function updateStats() {
+            document.getElementById('total-reviews').textContent = reviews.length;
+            
+            const avgRating = reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length;
+            document.getElementById('avg-rating').textContent = avgRating.toFixed(1);
+            
+            const positiveReviews = reviews.filter(review => review.sentiment === 'positive').length;
+            const positiveRate = (positiveReviews / reviews.length) * 100;
+            document.getElementById('positive-rate').textContent = positiveRate.toFixed(0) + '%';
+            
+            const avgCredibility = reviews.reduce((sum, review) => sum + review.credibility, 0) / reviews.length;
+            document.getElementById('avg-credibility').textContent = avgCredibility.toFixed(0) + '%';
+        }
+
+        function initializeCharts() {
+            const ctx = document.getElementById('sentimentChart').getContext('2d');
+            
+            // Count sentiments
+            const sentimentCounts = {
+                positive: reviews.filter(r => r.sentiment === 'positive').length,
+                neutral: reviews.filter(r => r.sentiment === 'neutral').length,
+                negative: reviews.filter(r => r.sentiment === 'negative').length
+            };
+            
+            window.sentimentChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Positive', 'Neutral', 'Negative'],
+                    datasets: [{
+                        data: [sentimentCounts.positive, sentimentCounts.neutral, sentimentCounts.negative],
+                        backgroundColor: [
+                            '#4caf50',
+                            '#ff9800',
+                            '#f44336'
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        },
+                        title: {
+                            display: true,
+                            text: 'Sentiment Distribution'
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateCharts() {
+            if (window.sentimentChart) {
+                // Count sentiments
+                const sentimentCounts = {
+                    positive: reviews.filter(r => r.sentiment === 'positive').length,
+                    neutral: reviews.filter(r => r.sentiment === 'neutral').length,
+                    negative: reviews.filter(r => r.sentiment === 'negative').length
+                };
+                
+                window.sentimentChart.data.datasets[0].data = [
+                    sentimentCounts.positive,
+                    sentimentCounts.neutral,
+                    sentimentCounts.negative
+                ];
+                
+                window.sentimentChart.update();
+            }
+        }
+
+        function loadReviews() {
+            // In a real app, this would load from an API
+            // For demo, we're using the sample data
+            updateStats();
+        }
+
+        // Rate Limiting
+        function updateRateLimitDisplay() {
+            const progress = document.getElementById('rateProgress');
+            const text = document.getElementById('rateLimitText');
+            
+            const percentage = (apiCallCount / SECURITY_CONFIG.rateLimit) * 100;
+            progress.style.width = `${percentage}%`;
+            text.textContent = `${apiCallCount}/${SECURITY_CONFIG.rateLimit}`;
+            
+            // Change color based on usage
+            if (percentage > 80) {
+                progress.style.background = '#f44336';
+            } else if (percentage > 60) {
+                progress.style.background = '#ff9800';
+            } else {
+                progress.style.background = '#4caf50';
+            }
+        }
+
+        // Admin Functions
+        function manageUsers() {
+            if (currentUser && currentUser.role === 'admin') {
+                alert('User management panel would open here');
+                // In a real app, this would show a user management interface
+            } else {
+                alert('Access denied. Administrator privileges required.');
+            }
+        }
+
+        function viewSecurityLogs() {
+            if (currentUser && currentUser.role === 'admin') {
+                alert('Security logs would be displayed here');
+                // In a real app, this would show security logs
+            } else {
+                alert('Access denied. Administrator privileges required.');
+            }
+        }
+
+        function systemSettings() {
+            if (currentUser && currentUser.role === 'admin') {
+                alert('System configuration panel would open here');
+                // In a real app, this would show system settings
+            } else {
+                alert('Access denied. Administrator privileges required.');
+            }
+        }
+
+        // Animation Functions
+        function initializeScrollAnimations() {
+            const cards = document.querySelectorAll('.card');
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    }
+                });
+            }, { threshold: 0.1 });
+            
+            cards.forEach(card => {
+                observer.observe(card);
+            });
+        }
+    </script>
+</body>
+</html>

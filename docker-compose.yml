@@ -1,0 +1,70 @@
+﻿version: '3.8'
+
+services:
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: feedback_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  django:
+    build: ./django_backend
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - ./django_backend:/app
+    ports:
+      - "8000:8000"
+    environment:
+      - DB_HOST=db
+      - DB_NAME=feedback_db
+      - DB_USER=postgres
+      - DB_PASSWORD=password
+      - AI_SERVICE_URL=http://flask-ai:5000
+    depends_on:
+      db:
+        condition: service_healthy
+
+  flask-ai:
+    build: ./flask_ai_service
+    command: python app.py
+    volumes:
+      - ./flask_ai_service:/app
+    ports:
+      - "5000:5000"
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - REACT_APP_API_URL=http://localhost:8000
+    depends_on:
+      - django
+
+  ai-training:
+    build: ./advanced_ai
+    volumes:
+      - ./advanced_ai:/app
+      - ./data:/app/data
+    environment:
+      - PYTHONPATH=/app
+    command: >
+      sh -c "echo 'AI Training environment ready' && sleep infinity"
+
+volumes:
+  postgres_data:
