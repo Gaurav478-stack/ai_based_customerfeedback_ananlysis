@@ -1,0 +1,3 @@
+[submodule "external/ml-agent"]
+	path = external/ml-agent
+	url = https://github.com/patrickstolc/ml-customer-feedback-agent.git
